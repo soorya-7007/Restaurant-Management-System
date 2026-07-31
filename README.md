@@ -39,27 +39,33 @@ The system is built with **role-based access control**, so each user type sees o
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **React 19** + **Vite** — fast, modern SPA architecture
-- **React Router DOM v7** — client-side routing with protected routes
-- **Tailwind CSS v4** — utility-first styling
-- **Framer Motion** — smooth UI animations and transitions
-- **Recharts** — data visualization for the admin dashboard
-- **Axios** — API communication with JWT auth interceptors
-- **Socket.io Client** — real-time updates on the Kitchen Display System
-- **Lucide React** — icon library
+| Technology | Purpose |
+|---|---|
+| React 19 + Vite | Fast, modern SPA architecture |
+| React Router DOM v7 | Client-side routing with protected routes |
+| Tailwind CSS v4 | Utility-first styling |
+| Framer Motion | Smooth UI animations and transitions |
+| Recharts | Data visualization for the admin dashboard |
+| Axios | API communication with JWT auth interceptors |
+| Socket.io Client | Real-time updates on the Kitchen Display System |
+| Lucide React | Icon library |
 
 ### Backend
-- **Node.js** + **Express 5** — REST API server
-- **Sequelize ORM** — database modeling, migrations, and seeders
-- **MySQL** (production/Docker) & **SQLite** (local development)
-- **Socket.io** — real-time, room-based event broadcasting (POS → Kitchen)
-- **JWT** + **bcryptjs** — authentication and password hashing
-- **Helmet**, **CORS**, **Morgan** — security headers, cross-origin handling, and request logging
-- **Jest** + **Supertest** — backend testing
+| Technology | Purpose |
+|---|---|
+| Node.js + Express 5 | REST API server |
+| Sequelize ORM | Database modeling, migrations, and seeders |
+| MySQL / SQLite | Production (Docker) & local development databases |
+| Socket.io | Real-time, room-based event broadcasting (POS → Kitchen) |
+| JWT + bcryptjs | Authentication and password hashing |
+| Helmet, CORS, Morgan | Security headers, cross-origin handling, request logging |
+| Jest + Supertest | Backend testing |
 
 ### DevOps
-- **Docker Compose** — containerized MySQL and Redis services
-- **Nodemon** — hot-reloading during development
+| Technology | Purpose |
+|---|---|
+| Docker Compose | Containerized MySQL and Redis services |
+| Nodemon | Hot-reloading during development |
 
 ---
 
