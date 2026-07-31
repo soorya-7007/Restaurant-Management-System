@@ -38,14 +38,31 @@ The system is built with **role-based access control**, so each user type sees o
 
 ## 🛠️ Tech Stack
 
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
-![Tailwind](https://img.shields.io/badge/TailwindCSS-4-06B6D4?logo=tailwindcss&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-Express%205-339933?logo=node.js&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)
-![Socket.io](https://img.shields.io/badge/Socket.io-Real--time-010101?logo=socket.io&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
----
+### Frontend
+| Technology | Purpose |
+|---|---|
+| React 19 + Vite | Fast, modern SPA architecture |
+| React Router DOM v7 | Client-side routing with protected, role-based routes |
+| Tailwind CSS v4 | Utility-first styling |
+| Framer Motion | Smooth UI animations and transitions |
+| Recharts | Data visualization for the admin dashboard |
+| Axios | API communication with JWT auth interceptors |
+| Socket.io Client | Real-time order updates on the Kitchen Display System |
+
+### Backend
+| Technology | Purpose |
+|---|---|
+| Node.js + Express 5 | REST API server |
+| Sequelize ORM | Database modeling, migrations, and seeders |
+| MySQL / SQLite | Production (Docker) and local development databases |
+| Socket.io | Real-time, room-based event broadcasting (POS → Kitchen) |
+| JWT + bcryptjs | Authentication and password hashing |
+| Jest + Supertest | Backend testing |
+
+### DevOps
+| Technology | Purpose |
+|---|---|
+| Docker Compose | Containerized MySQL and Redis services |
 
 ## 🏗️ Architecture
 
