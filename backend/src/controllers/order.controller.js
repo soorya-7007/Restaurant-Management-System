@@ -1,4 +1,13 @@
-const { Order, OrderItem, Inventory, sequelize } = require('../models');
+const { Order, OrderItem, MenuItem, Inventory, sequelize } = require('../models');
+
+// Orders are sent to the KDS with their items and each item's menu entry, so
+// the kitchen sees dish names instead of raw menu_item_id values.
+const ORDER_INCLUDE = [
+  {
+    model: OrderItem,
+    include: [{ model: MenuItem, attributes: ['id', 'name', 'category'] }],
+  },
+];
 
 const createOrder = async (req, res) => {
   const { branch_id, items, total_amount, table_number } = req.body;
@@ -21,7 +30,8 @@ const createOrder = async (req, res) => {
         order_id: order.id,
         menu_item_id: item.id,
         quantity: item.quantity,
-        price: item.price
+        price: item.price,
+        notes: item.notes || null
       }));
       await OrderItem.bulkCreate(orderItemsData, { transaction: t });
 
@@ -45,12 +55,15 @@ const createOrder = async (req, res) => {
       return order;
     });
 
-    // Emit Socket.io event for KDS
+    // Emit Socket.io event for KDS. Re-read with the items included so a live
+    // ticket carries the same shape as one fetched via GET /api/orders —
+    // previously the bare Order was emitted and arrived with no line items.
     const io = req.app.get('io');
     if (io) {
-      io.to('kitchen').emit('newOrder', result);
+      const fullOrder = await Order.findByPk(result.id, { include: ORDER_INCLUDE });
+      io.to('kitchen').emit('newOrder', fullOrder || result);
     }
-    
+
     res.status(201).json(result);
   } catch (error) {
     console.error('Order creation failed:', error);
@@ -61,7 +74,7 @@ const createOrder = async (req, res) => {
 const getOrders = async (req, res) => {
   try {
     const orders = await Order.findAll({
-      include: [OrderItem],
+      include: ORDER_INCLUDE,
       order: [['createdAt', 'DESC']]
     });
     res.json(orders);

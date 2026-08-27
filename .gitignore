@@ -1,3 +1,10 @@
 node_modules/
 *.sqlite
 .env
+
+# Build output
+dist/
+
+# Local dev tooling & throwaway scripts
+.claude/
+backend/scratch*.js

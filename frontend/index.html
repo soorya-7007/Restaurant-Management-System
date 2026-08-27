@@ -3,8 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="Restaurant management system — point of sale, kitchen display, and analytics for multi-branch restaurant operations."
+    />
+    <meta name="theme-color" content="#0f0f17" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+    <title>Restaurant Manager — POS, Kitchen &amp; Analytics</title>
+    <script>
+      // Apply the stored theme before first paint so there is no flash of the
+      // wrong colour scheme on load.
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme') || 'system';
+          var dark =
+            stored === 'dark' ||
+            (stored === 'system' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+        } catch (e) {
+          /* localStorage unavailable — fall back to the CSS default. */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

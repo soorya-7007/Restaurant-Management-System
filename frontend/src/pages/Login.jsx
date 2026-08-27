@@ -1,139 +1,216 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { KeyRound, ShieldCheck, Mail, Lock, Loader2, LogIn } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import {
+  ChefHat,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Lock,
+  LogIn,
+  Mail,
+  ShieldCheck,
+  UserRound,
+} from 'lucide-react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth, homeForRole } from '../auth/AuthContext';
+import { errorMessage } from '../lib/api';
+import Button from '../ui/Button';
+import TextField from '../ui/TextField';
+import ThemeToggle from '../ui/ThemeToggle';
+import AmbientGlow from '../ui/AmbientGlow';
 
-function Login({ setUser }) {
+const DEMO_ACCOUNTS = [
+  { role: 'Admin', email: 'admin@demo.com', icon: ShieldCheck, tone: 'text-brand' },
+  { role: 'Chef', email: 'chef@demo.com', icon: ChefHat, tone: 'text-warning' },
+  { role: 'Waiter', email: 'waiter@demo.com', icon: UserRound, tone: 'text-info' },
+];
+const DEMO_PASSWORD = 'password123';
+
+function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, login } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  // Already signed in — don't show the form again.
+  if (user) return <Navigate to={homeForRole(user.role)} replace />;
+
+  const validate = (emailValue, passwordValue) => {
+    const errors = {};
+    if (!emailValue.trim()) errors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue))
+      errors.email = 'Enter a valid email address';
+    if (!passwordValue) errors.password = 'Password is required';
+    return errors;
+  };
+
+  const signIn = async (emailValue, passwordValue) => {
+    const errors = validate(emailValue, passwordValue);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setLoading(true);
     setError('');
-
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
-        email,
-        password
+      const signedIn = await login(emailValue, passwordValue);
+      // Return them to whatever page sent them here, if any.
+      const from = location.state?.from;
+      navigate(from && from !== '/login' ? from : homeForRole(signedIn.role), {
+        replace: true,
       });
-
-      const { token, user } = response.data;
-      
-      // Store token
-      localStorage.setItem('token', token);
-      
-      // Set user globally
-      setUser(user);
-      
-      // Redirect based on RBAC
-      if (user.role === 'Admin') navigate('/admin');
-      else if (user.role === 'Chef') navigate('/kitchen');
-      else navigate('/pos');
-
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to authenticate');
+      setError(errorMessage(err, 'Failed to authenticate'));
     } finally {
       setLoading(false);
     }
   };
 
-  const setTestCreds = (e, p) => {
-    setEmail(e);
-    setPassword(p);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    signIn(email, password);
+  };
+
+  /** One tap to sign in as a demo role — previously this only filled the form. */
+  const signInAs = (account) => {
+    setEmail(account.email);
+    setPassword(DEMO_PASSWORD);
+    setFieldErrors({});
+    signIn(account.email, DEMO_PASSWORD);
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#0a0a0f] text-white items-center justify-center relative overflow-hidden font-sans">
-      <motion.div 
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-600/30 rounded-full blur-[120px] pointer-events-none" 
-      />
-      <motion.div 
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 4 }}
-        className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-blue-600/30 rounded-full blur-[120px] pointer-events-none" 
-      />
+    <div className="relative min-h-dvh flex items-center justify-center bg-surface px-4 py-8 overflow-hidden">
+      <AmbientGlow />
 
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle />
+      </div>
+
+      <motion.main
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, type: 'spring' }}
-        className="relative z-10 w-full max-w-md bg-white/5 backdrop-blur-2xl border border-white/10 p-10 rounded-[2rem] shadow-2xl"
+        transition={{ duration: 0.4 }}
+        className="relative z-10 w-full max-w-md bg-surface-raised border border-border
+                   p-6 sm:p-9 rounded-3xl shadow-[var(--shadow-card)]"
       >
-        <div className="text-center mb-10">
-          <div className="w-16 h-16 bg-gradient-to-tr from-purple-600 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30 mx-auto mb-6">
-            <ShieldCheck size={32} className="text-white" />
+        <div className="text-center mb-8">
+          <div
+            className="w-14 h-14 bg-brand rounded-2xl flex items-center justify-center mx-auto mb-5"
+            aria-hidden="true"
+          >
+            <ShieldCheck size={28} className="text-brand-contrast" />
           </div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 mb-2 tracking-tight">System Access</h1>
-          <p className="text-slate-400">Enter your credentials to continue</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-text mb-1.5 tracking-tight">
+            Welcome back
+          </h1>
+          <p className="text-muted text-sm">Sign in to your restaurant workspace</p>
         </div>
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-5 mb-8">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
           {error && (
-            <div className="bg-red-500/10 border border-red-500/50 text-red-400 p-3 rounded-xl text-sm text-center">
+            <div
+              role="alert"
+              className="bg-danger-soft border border-danger/40 text-danger px-4 py-3 rounded-xl text-sm font-medium"
+            >
               {error}
             </div>
           )}
 
-          <div>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-              <input 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email Address" 
-                required
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-purple-500 transition-colors"
-              />
-            </div>
-          </div>
+          <TextField
+            label="Email address"
+            type="email"
+            name="email"
+            autoComplete="email"
+            /* eslint-disable-next-line jsx-a11y/no-autofocus */
+            autoFocus
+            icon={Mail}
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (fieldErrors.email) setFieldErrors((p) => ({ ...p, email: null }));
+            }}
+            placeholder="you@restaurant.com"
+            error={fieldErrors.email}
+          />
 
-          <div>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password" 
-                required
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-purple-500 transition-colors"
-              />
-            </div>
-          </div>
+          <TextField
+            label="Password"
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            autoComplete="current-password"
+            icon={Lock}
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (fieldErrors.password)
+                setFieldErrors((p) => ({ ...p, password: null }));
+            }}
+            placeholder="Enter your password"
+            error={fieldErrors.password}
+            trailing={
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                className="p-2 text-subtle hover:text-text transition-colors focus-ring rounded-lg"
+              >
+                {showPassword ? (
+                  <EyeOff size={18} aria-hidden="true" />
+                ) : (
+                  <Eye size={18} aria-hidden="true" />
+                )}
+              </button>
+            }
+          />
 
-          <button 
+          <Button
             type="submit"
-            disabled={loading}
-            className="w-full py-3.5 mt-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-purple-500/25 transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
+            size="lg"
+            fullWidth
+            loading={loading}
+            icon={LogIn}
+            className="mt-2"
           >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} />}
-            {loading ? 'Authenticating...' : 'Sign In'}
-          </button>
+            {loading ? 'Signing in…' : 'Sign in'}
+          </Button>
         </form>
 
-        <div className="border-t border-white/10 pt-6">
-          <p className="text-xs text-slate-500 mb-3 text-center uppercase tracking-wider font-semibold">Test Credentials</p>
-          <div className="flex justify-center gap-2">
-            <button type="button" onClick={() => setTestCreds('admin@demo.com', 'password123')} className="px-3 py-1.5 bg-white/5 hover:bg-purple-500/20 text-slate-400 hover:text-purple-300 rounded text-xs transition-colors border border-white/5">Admin</button>
-            <button type="button" onClick={() => setTestCreds('chef@demo.com', 'password123')} className="px-3 py-1.5 bg-white/5 hover:bg-orange-500/20 text-slate-400 hover:text-orange-300 rounded text-xs transition-colors border border-white/5">Chef</button>
-            <button type="button" onClick={() => setTestCreds('waiter@demo.com', 'password123')} className="px-3 py-1.5 bg-white/5 hover:bg-blue-500/20 text-slate-400 hover:text-blue-300 rounded text-xs transition-colors border border-white/5">Waiter</button>
+        <div className="border-t border-border mt-7 pt-6">
+          <p className="text-xs text-subtle mb-3 text-center uppercase tracking-wider font-semibold">
+            Or try a demo account
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {DEMO_ACCOUNTS.map((account) => {
+              const Icon = account.icon;
+              return (
+                <button
+                  key={account.role}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => signInAs(account)}
+                  className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border border-border
+                             bg-surface hover:bg-surface-hover hover:border-border-strong
+                             transition-colors focus-ring disabled:opacity-50 min-h-[44px]"
+                >
+                  <Icon size={18} className={account.tone} aria-hidden="true" />
+                  <span className="text-xs font-semibold text-text">{account.role}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="mt-8 text-center text-xs text-slate-500">
-          <p className="flex items-center justify-center gap-1">
-            <KeyRound size={12} /> Secured by RSA-256 JWT
-          </p>
-        </div>
-      </motion.div>
+        <p className="mt-6 text-center text-xs text-subtle flex items-center justify-center gap-1.5">
+          <KeyRound size={12} aria-hidden="true" /> Secured with encrypted access tokens
+        </p>
+      </motion.main>
     </div>
   );
 }

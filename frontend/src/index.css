@@ -1,8 +1,112 @@
 @import "tailwindcss";
 
+/* Tailwind v4 class-based dark mode — driven by `.dark` on <html> (see ThemeProvider). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Semantic tokens. Pages reference these instead of hardcoding `bg-white/5`
+   and `isDarkMode ? ... : ...` ternaries.
+   --------------------------------------------------------------------------- */
 :root {
-  --background: oklch(0.98 0 0);
-  --foreground: oklch(0.14 0 0);
+  --surface: oklch(0.98 0.002 270);
+  --surface-raised: oklch(1 0 0);
+  --surface-sunken: oklch(0.95 0.004 270);
+  --surface-hover: oklch(0.96 0.004 270);
+
+  --border: oklch(0.9 0.006 270);
+  --border-strong: oklch(0.84 0.008 270);
+
+  --text: oklch(0.22 0.01 270);
+  --text-muted: oklch(0.52 0.014 270);
+  --text-subtle: oklch(0.64 0.012 270);
+
+  --brand: oklch(0.55 0.22 295);
+  --brand-hover: oklch(0.49 0.22 295);
+  --brand-contrast: oklch(1 0 0);
+  --brand-soft: oklch(0.94 0.04 295);
+  --accent: oklch(0.58 0.2 260);
+
+  --success: oklch(0.6 0.16 155);
+  --success-soft: oklch(0.94 0.05 155);
+  --warning: oklch(0.68 0.17 65);
+  --warning-soft: oklch(0.95 0.06 65);
+  --danger: oklch(0.58 0.2 25);
+  --danger-soft: oklch(0.95 0.05 25);
+  --info: oklch(0.6 0.16 250);
+  --info-soft: oklch(0.94 0.05 250);
+
+  --ring: oklch(0.55 0.22 295);
+  --glow-a: oklch(0.55 0.22 295 / 0.1);
+  --glow-b: oklch(0.58 0.2 260 / 0.1);
+
+  --shadow-card: 0 1px 2px oklch(0.2 0.02 270 / 0.06), 0 8px 24px oklch(0.2 0.02 270 / 0.06);
+}
+
+.dark {
+  --surface: oklch(0.15 0.014 285);
+  --surface-raised: oklch(0.19 0.017 285);
+  --surface-sunken: oklch(0.12 0.012 285);
+  --surface-hover: oklch(0.23 0.019 285);
+
+  --border: oklch(0.29 0.016 285);
+  --border-strong: oklch(0.38 0.02 285);
+
+  --text: oklch(0.97 0.003 285);
+  --text-muted: oklch(0.72 0.014 285);
+  --text-subtle: oklch(0.58 0.016 285);
+
+  --brand: oklch(0.66 0.19 295);
+  --brand-hover: oklch(0.72 0.18 295);
+  --brand-contrast: oklch(0.15 0.014 285);
+  --brand-soft: oklch(0.3 0.09 295);
+  --accent: oklch(0.68 0.16 260);
+
+  --success: oklch(0.74 0.15 158);
+  --success-soft: oklch(0.3 0.07 158);
+  --warning: oklch(0.79 0.15 70);
+  --warning-soft: oklch(0.32 0.08 70);
+  --danger: oklch(0.7 0.18 22);
+  --danger-soft: oklch(0.32 0.09 22);
+  --info: oklch(0.72 0.14 250);
+  --info-soft: oklch(0.3 0.08 250);
+
+  --ring: oklch(0.72 0.18 295);
+  --glow-a: oklch(0.55 0.22 295 / 0.18);
+  --glow-b: oklch(0.58 0.2 260 / 0.16);
+
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.3), 0 12px 32px oklch(0 0 0 / 0.35);
+}
+
+/* Expose the tokens as Tailwind utilities: bg-surface, text-muted, border-border… */
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-hover: var(--surface-hover);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-contrast: var(--brand-contrast);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+
+  --color-ring: var(--ring);
 }
 
 body {
@@ -12,6 +116,65 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+/* Keeps iOS Safari from zooming when a sub-16px input is focused. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Referenced by the POS scroll containers but previously never defined. */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-subtle);
+}
+
+/* One visible focus treatment, applied wherever we strip the UA outline. */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Visually hidden but announced by screen readers. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
