@@ -106,4 +106,74 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, getOrders, updateOrderStatus };
+const getAnalytics = async (req, res) => {
+  try {
+    const orders = await Order.findAll({
+      include: ORDER_INCLUDE,
+    });
+    const inventory = await Inventory.findAll();
+
+    let totalRevenue = 0;
+    let ordersToday = 0;
+    const activeCustomersSet = new Set();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const revenueByDay = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+    const itemSales = {};
+
+    orders.forEach(order => {
+      const orderDate = new Date(order.createdAt);
+      totalRevenue += parseFloat(order.total_amount) || 0;
+      
+      // Orders today
+      if (orderDate >= today) {
+        ordersToday++;
+        if (order.table_number) {
+          activeCustomersSet.add(order.table_number);
+        }
+      }
+
+      // Weekly revenue (simple bucket by day of week)
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const dayName = days[orderDate.getDay()];
+      revenueByDay[dayName] += parseFloat(order.total_amount) || 0;
+
+      // Item sales
+      if (order.OrderItems) {
+        order.OrderItems.forEach(oi => {
+          if (oi.MenuItem) {
+            const name = oi.MenuItem.name;
+            itemSales[name] = (itemSales[name] || 0) + oi.quantity;
+          }
+        });
+      }
+    });
+
+    const revenueData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => ({
+      name: day,
+      revenue: revenueByDay[day]
+    }));
+
+    const itemData = Object.keys(itemSales)
+      .map(name => ({ name, sales: itemSales[name] }))
+      .sort((a, b) => b.sales - a.sales)
+      .slice(0, 4);
+
+    const lowStockCount = inventory.filter(item => parseFloat(item.quantity) <= parseFloat(item.min_quantity)).length;
+
+    res.json({
+      totalRevenue,
+      ordersToday,
+      activeCustomers: activeCustomersSet.size,
+      lowStockCount,
+      revenueData,
+      itemData
+    });
+  } catch (error) {
+    console.error('Failed to fetch analytics:', error);
+    res.status(500).json({ error: 'Failed to fetch analytics' });
+  }
+};
+
+module.exports = { createOrder, getOrders, updateOrderStatus, getAnalytics };

@@ -1,26 +1,29 @@
-version: '3.8'
-
 services:
-  db:
-    image: mysql:8.0
-    container_name: restaurant_mysql
+  backend:
+    build: ./backend
+    container_name: restaurant_backend
+    ports:
+      - "5000:5000"
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: restaurant_db
-      MYSQL_USER: restaurant_user
-      MYSQL_PASSWORD: password
-    ports:
-      - "3306:3306"
+      - NODE_ENV=development
+      - PORT=5000
+      - JWT_SECRET=supersecret        # matches the code's fallback; change for real use
+      - CHOKIDAR_USEPOLLING=true       # reliable nodemon file-watching on Docker/macOS
     volumes:
-      - db_data:/var/lib/mysql
+      - ./backend:/app                 # source bind-mount -> hot reload + persists database.sqlite on host
+      - /app/node_modules              # anonymous volume: keep the container's Linux-built node_modules
     restart: unless-stopped
 
-  redis:
-    image: redis:alpine
-    container_name: restaurant_redis
+  frontend:
+    build: ./frontend
+    container_name: restaurant_frontend
     ports:
-      - "6379:6379"
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true       # reliable Vite HMR file-watching on Docker/macOS
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
     restart: unless-stopped
-
-volumes:
-  db_data:

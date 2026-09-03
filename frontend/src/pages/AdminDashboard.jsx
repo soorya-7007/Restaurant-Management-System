@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Area,
   AreaChart,
@@ -29,53 +29,45 @@ import Button from '../ui/Button';
 import AmbientGlow from '../ui/AmbientGlow';
 import AIPredictor from '../components/AIPredictor';
 import { formatCurrency } from '../lib/format';
+import api from '../lib/api';
 
-/**
- * Demo figures. There is no analytics endpoint yet — /api/orders/analytics
- * returns a placeholder message — so these are clearly labelled as sample data
- * rather than presented as real numbers.
- */
-const revenueData = [
-  { name: 'Mon', revenue: 4000 },
-  { name: 'Tue', revenue: 3000 },
-  { name: 'Wed', revenue: 5000 },
-  { name: 'Thu', revenue: 2780 },
-  { name: 'Fri', revenue: 8900 },
-  { name: 'Sat', revenue: 11000 },
-  { name: 'Sun', revenue: 9500 },
-];
-
-const itemData = [
-  { name: 'Burger', sales: 145 },
-  { name: 'Pizza', sales: 120 },
-  { name: 'Latte', sales: 85 },
-  { name: 'Fries', sales: 200 },
-];
-
-const KPIS = [
-  { label: 'Total revenue', value: formatCurrency(44180), icon: IndianRupee, tone: 'success' },
-  { label: 'Orders today', value: '142', icon: TrendingUp, tone: 'brand' },
-  { label: 'Active customers', value: '89', icon: Users, tone: 'info' },
-  {
-    label: 'Low stock alerts',
-    value: '2 items',
-    icon: Package,
-    tone: 'danger',
-    emphasis: true,
-  },
-];
-
-function DemoBadge() {
-  return (
-    <span className="text-[10px] font-bold uppercase tracking-wider bg-warning-soft text-warning px-2 py-0.5 rounded-full shrink-0">
-      Demo data
-    </span>
-  );
-}
 
 function AdminDashboard() {
   const { user, logout } = useAuth();
   const { isDark } = useTheme();
+
+  const [revenueData, setRevenueData] = useState([]);
+  const [itemData, setItemData] = useState([]);
+  const [KPIS, setKpis] = useState([
+    { label: 'Total revenue', value: formatCurrency(0), icon: IndianRupee, tone: 'success' },
+    { label: 'Orders today', value: '0', icon: TrendingUp, tone: 'brand' },
+    { label: 'Active customers', value: '0', icon: Users, tone: 'info' },
+    { label: 'Low stock alerts', value: '0 items', icon: Package, tone: 'danger', emphasis: true },
+  ]);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const response = await api.get('/orders/analytics');
+        const data = response.data;
+        
+        setRevenueData(data.revenueData || []);
+        setItemData(data.itemData || []);
+        
+        setKpis([
+          { label: 'Total revenue', value: formatCurrency(data.totalRevenue || 0), icon: IndianRupee, tone: 'success' },
+          { label: 'Orders today', value: String(data.ordersToday || 0), icon: TrendingUp, tone: 'brand' },
+          { label: 'Active customers', value: String(data.activeCustomers || 0), icon: Users, tone: 'info' },
+          { label: 'Low stock alerts', value: `${data.lowStockCount || 0} items`, icon: Package, tone: 'danger', emphasis: true },
+        ]);
+      } catch (err) {
+        console.error('Failed to load analytics', err);
+      }
+    };
+    fetchAnalytics();
+  }, []);
+
+
 
   // Recharts needs concrete values, so the palette follows the active theme —
   // the old hardcoded #1e1e2e tooltip was unreadable in light mode.
@@ -133,12 +125,7 @@ function AdminDashboard() {
           </Button>
         </PageHeader>
 
-        <div className="flex items-center gap-2 mb-5">
-          <DemoBadge />
-          <p className="text-xs text-subtle">
-            Figures below are sample values — no analytics endpoint is wired up yet.
-          </p>
-        </div>
+
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           {KPIS.map((kpi) => (
@@ -150,7 +137,6 @@ function AdminDashboard() {
           <Card className="xl:col-span-2 flex flex-col">
             <div className="flex items-center justify-between gap-3 mb-5">
               <h2 className="text-lg font-bold text-text">Weekly revenue trend</h2>
-              <DemoBadge />
             </div>
             <figure className="flex-1 min-h-[260px] sm:min-h-[300px] w-full m-0">
               <figcaption className="sr-only">
@@ -206,7 +192,6 @@ function AdminDashboard() {
           <Card className="xl:col-span-3">
             <div className="flex items-center justify-between gap-3 mb-5">
               <h2 className="text-lg font-bold text-text">Top selling items</h2>
-              <DemoBadge />
             </div>
             <figure className="h-56 sm:h-64 w-full m-0">
               <figcaption className="sr-only">

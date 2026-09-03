@@ -1,5 +1,5 @@
 const express = require('express');
-const { createOrder, getOrders, updateOrderStatus } = require('../controllers/order.controller');
+const { createOrder, getOrders, updateOrderStatus, getAnalytics } = require('../controllers/order.controller');
 const { requireAuth, requireRole } = require('../middleware/auth.middleware');
 const router = express.Router();
 
@@ -12,9 +12,7 @@ router.post('/', requireAuth, requireRole(['Waiter', 'Admin']), createOrder);
 // Update order status (Restricted to Chef)
 router.patch('/:id/status', requireAuth, requireRole(['Chef', 'Admin']), updateOrderStatus);
 
-// Admin-only Analytics Mock Route
-router.get('/analytics', requireAuth, requireRole(['Admin']), (req, res) => {
-  res.json({ message: 'Secure Admin Analytics Data' });
-});
+// Admin Analytics Route
+router.get('/analytics', requireAuth, requireRole(['Admin']), getAnalytics);
 
 module.exports = router;
